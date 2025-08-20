@@ -15,6 +15,33 @@
 
 This project implements a Git client and server in Guile Scheme 3.0+, following the excellent [[https://wyag.thb.lt/]["Write Yourself a Git!"]] tutorial. The implementation emphasizes functional programming patterns, experiment-driven development, and FreeBSD-specific optimizations.
 
+* Current Status
+
+** 🚀 Server Running!
+The Guile Git server is *now running* in a tmux session and accepting connections!
+
+#+BEGIN_SRC bash
+# Server session: guile-git-server
+# Port: 9418
+# Status: RUNNING ✓
+
+# Connect to view logs:
+tmux attach -t guile-git-server
+#+END_SRC
+
+** Working Features
+- [X] TCP server on port 9418
+- [X] Git protocol handshake
+- [X] receive-pack command recognition
+- [X] Reference advertisement
+- [X] Basic push negotiation
+
+** In Development
+- [ ] Pack file parsing
+- [ ] Object decompression and storage
+- [ ] Reference updates
+- [ ] Full push support
+
 * Architecture
 
 #+BEGIN_SRC mermaid
@@ -203,15 +230,67 @@ Using conventional commits:
 - Document all public procedures
 - Keep modules focused and cohesive
 
+* Dogfooding Methodology
+
+** Philosophy
+This project practices *extreme dogfooding* - we use our own Git implementation as soon as possible, even with minimal functionality. This approach:
+- Forces immediate practical validation
+- Reveals real-world issues quickly
+- Creates a tight feedback loop
+- Demonstrates confidence in the implementation
+
+** Current Dogfooding Setup
+#+BEGIN_SRC bash
+# Start the Guile Git server in tmux
+./start-dogfood-server.sh
+
+# View server logs
+tmux attach -t guile-git-server
+
+# Add as remote to any git repo
+git remote add dogfood git://localhost:9418/my-project.git
+git push dogfood main
+
+# Server runs continuously for development
+#+END_SRC
+
+** Dogfooding Milestones
+- [X] v0.0.1 - Server accepts connections (ACHIEVED!)
+- [X] v0.0.2 - Basic push handshake works
+- [ ] v0.0.3 - Pack files are received
+- [ ] v0.0.4 - Objects are stored
+- [ ] v0.1.0 - Full push support
+- [ ] v0.2.0 - Clone/fetch works
+- [ ] v1.0.0 - Self-hosting development
+
 * Getting Started
 
 ** Prerequisites
 #+BEGIN_SRC bash
 # FreeBSD packages
-pkg install guile3 gmake
+pkg install guile3 gmake tmux
 
 # Optional for full functionality
 pkg install emacs  # For org-mode tangling
+#+END_SRC
+
+** Quick Start - Dogfooding
+#+BEGIN_SRC bash
+# Clone the repository
+git clone https://github.com/dsp-dr/guile-git-scratch.git
+cd guile-git-scratch
+
+# Start the dogfood server
+./start-dogfood-server.sh
+
+# In another terminal, test pushing
+git remote add dogfood git://localhost:9418/test.git
+echo "dogfood test" > test.txt
+git add test.txt && git commit -m "Dogfood test"
+git push dogfood main
+
+# Watch server logs
+tmux attach -t guile-git-server
 #+END_SRC
 
 ** Building
@@ -226,18 +305,22 @@ gmake build
 
 # Run tests
 gmake test
+
+# Start server
+gmake run-server       # Port 9418
+gmake test-server      # Port 9419
 #+END_SRC
 
 ** Usage
 #+BEGIN_SRC bash
-# Initialize a repository
-./guile-git init my-repo
+# Minimal server (working now!)
+./minimal-server.scm
 
-# Add files
-./guile-git add file.txt
+# Full server (in development)
+./run-server.scm
 
-# Commit changes
-./guile-git commit -m "Initial commit"
+# With custom port and repo path
+./run-server.scm -p 9419 -r ./my-repos
 #+END_SRC
 
 * Contributing
