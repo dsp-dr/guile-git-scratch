@@ -1,0 +1,117 @@
+#+TITLE: Experiment 006: Guile3 FreeBSD Segmentation Fault Investigation
+#+DATE: 2025-08-20
+#+AUTHOR: Guile Git Scratch Team
+
+* Problem Statement
+
+While implementing an Ollama integration plugin for AI-powered commit summaries, encountered a segmentation fault when running Guile3 scripts that use ~open-input-pipe~ on FreeBSD 14.3.
+
+* Segfault Details
+
+** Command that triggers segfault:
+#+begin_src bash
+./plugins/ollama-simple-woofs.scm
+#+end_src
+
+** GDB Backtrace:
+#+begin_example
+Thread 1 received signal SIGSEGV, Segmentation fault.
+Address not mapped to object.
+0x00000008007f7a55 in posix_spawn_file_actions_addclosefrom_np () from /lib/libc.so.7
+
+#0  posix_spawn_file_actions_addclosefrom_np () from /lib/libc.so.7
+#1  ?? () from /usr/local/lib/libguile-3.0.so.1
+#2  ?? () from /usr/local/lib/libguile-3.0.so.1
+#3  ?? () from /usr/local/lib/libguile-3.0.so.1
+#4  ?? () from /usr/local/lib/libguile-3.0.so.1
+#5  scm_call_n () from /usr/local/lib/libguile-3.0.so.1
+#6  scm_eval () from /usr/local/lib/libguile-3.0.so.1
+#7  scm_shell () from /usr/local/lib/libguile-3.0.so.1
+#+end_example
+
+* Root Cause Analysis
+
+The segfault occurs in ~posix_spawn_file_actions_addclosefrom_np()~, which is a FreeBSD-specific function. This happens when Guile3 attempts to spawn shell processes via ~open-input-pipe~.
+
+** FreeBSD-Specific Issue
+- Function ~posix_spawn_file_actions_addclosefrom_np~ is FreeBSD-specific
+- Appears to be related to file descriptor management during process spawning
+- Likely a compatibility issue between Guile3 and FreeBSD's posix_spawn implementation
+
+** Code Path
+The segfault occurs when executing:
+#+begin_src scheme
+(let ((pipe (open-input-pipe curl-cmd)))
+  ...)
+#+end_src
+
+* Workaround Solutions
+
+** Solution 1: Shell Script Alternative ✅
+Created ~plugins/woof-ai-summary.sh~ as a pure shell script that works perfectly:
+#+begin_src bash
+./plugins/woof-ai-summary.sh test
+# 🐕 TESTING WOOF AI ANALYSIS...
+# 🐕 AI WOOF ANALYSIS - 2025-08-20 08:15:21
+# Woof woof! The developer just pushed their changes...
+#+end_src
+
+** Solution 2: Alternative Guile Approaches (Future)
+- Use Guile's FFI to call curl directly
+- Use Guile's HTTP client libraries instead of shell commands
+- Implement HTTP calls using pure Scheme
+
+* Impact on Project
+
+** Immediate Impact: ✅ Resolved
+- AI integration works via shell script
+- No functionality lost
+- Actually more portable (works on any Unix system)
+
+** Learning: Platform-Specific Issues
+- FreeBSD has specific POSIX extensions
+- Guile3's process spawning has compatibility issues
+- Shell scripts can be more reliable for system integration
+
+* Testing Results
+
+** Shell Script Version: ✅ Working
+#+begin_example
+🐕 AI WOOF ANALYSIS - 2025-08-20 08:15:21
+
+Woof woof! The developer just pushed their changes to the 'test-doghouse' 
+repository 🏡 and it sounds like they were trying to communicate with their 
+localhost server on port 9418. Looks like someone's project is growing 
+furiously, as if a new puppy was added to the team! 🐾
+
+🐕 WOOF! Saved AI analysis to: data/woofs/20250820-081525-test-doghouse-woof.txt
+#+end_example
+
+** Guile Version: ❌ Segfault
+- Consistent segmentation fault
+- Occurs during process spawning
+- Platform-specific issue
+
+* Recommendations
+
+1. **Use shell scripts for system integration** when calling external tools
+2. **Document platform-specific issues** for future reference  
+3. **Test on multiple platforms** when using process spawning
+4. **Consider pure Scheme alternatives** for critical functionality
+
+* Status: ✅ RESOLVED
+
+The AI integration works perfectly via shell script. The Guile segfault is documented as a platform-specific limitation, not a blocker for our project goals.
+
+** Files Created:
+- ~plugins/woof-ai-summary.sh~ - Working shell implementation
+- ~data/woofs/~ - Directory for AI analyses
+- This experiment documentation
+
+** Next Steps:
+- Continue with shell-based AI integration
+- Explore pure Scheme HTTP clients for future versions
+- Document this pattern for other system integrations
+
+---
+*"Sometimes the best solution is the simplest one. WOOF WOOF!" 🐕*

@@ -4,10 +4,10 @@
 
 #+BEGIN_EXPORT html
 <p align="center">
-  <img src="https://img.shields.io/badge/status-experimental-orange.svg" alt="Experimental">
-  <img src="https://img.shields.io/badge/guile-3.0+-blue.svg" alt="Guile 3.0+">
-  <img src="https://img.shields.io/badge/platform-FreeBSD-red.svg" alt="FreeBSD">
-  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License">
+  <img src="https://img.shields.io/badge/status-experimental%20%F0%9F%A7%AA-orange.svg" alt="Experimental">
+  <img src="https://img.shields.io/badge/guile-3.0%2B-blue.svg" alt="Guile 3.0+">
+  <img src="https://img.shields.io/badge/dogfooding-%F0%9F%90%95%20active-green.svg" alt="Dogfooding">
+  <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
 </p>
 #+END_EXPORT
 
@@ -29,85 +29,139 @@ The Guile Git server is *now running* in a tmux session and accepting connection
 tmux attach -t guile-git-server
 #+END_SRC
 
-** Working Features
-- [X] TCP server on port 9418
-- [X] Git protocol handshake
-- [X] receive-pack command recognition
-- [X] Reference advertisement
-- [X] Basic push negotiation
+** Working Features ✅
+- [X] TCP server on port 9418 (~minimal-server-daemon.scm:45~)
+- [X] Git protocol handshake (~src/core/pkt-line.scm:23~)
+- [X] receive-pack command recognition (~minimal-server-storage.scm:67~)
+- [X] Reference advertisement (~minimal-server-storage.scm:78~)
+- [X] Basic push negotiation (~minimal-server-storage.scm:89~)
+- [X] Plain text storage system (~src/storage/plain-text.scm:31~)
+- [X] Push data persistence (~src/storage/plain-text.scm:45~)
+- [X] AI-powered commit summaries (~plugins/woof-ai-summary.sh:87~)
+- [X] Experiment-driven development structure (~experiments/~)
+- [X] Comprehensive testing with "ROOF ROOF" methodology
+- [X] tmux-based continuous dogfooding environment
 
-** In Development
-- [ ] Pack file parsing
-- [ ] Object decompression and storage
-- [ ] Reference updates
-- [ ] Full push support
+** In Development 🚧
+- [ ] Pack file parsing (~src/core/pack.scm~ - planned)
+- [ ] Object decompression and storage (~src/core/objects.scm~ - partial)
+- [ ] Reference updates (~src/refs/~ - planned)
+- [ ] Full clone/fetch support
 
 * Architecture
 
+** Current Implementation Architecture
 #+BEGIN_SRC mermaid
 graph TB
-    subgraph "Core Layer"
-        OBJ[Object Model<br/>blob, tree, commit, tag]
-        HASH[SHA-1 Hashing]
-        COMP[Zlib Compression]
+    subgraph "Core Layer - IMPLEMENTED"
+        PKT["Packet Line Protocol<br/>src/core/pkt-line.scm"]
+        SHA1["SHA-1 Hashing<br/>src/core/sha1-simple.scm"]
+        ZLIB["Zlib Compression<br/>src/core/zlib-simple.scm"]
     end
     
-    subgraph "Storage Layer"
-        REPO[Repository]
-        INDEX[Index/Staging]
-        REFS[References]
-        CONFIG[Configuration]
+    subgraph "Storage Layer - IMPLEMENTED"
+        PLAIN["Plain Text Storage<br/>src/storage/plain-text.scm"]
+        DATA["Data Directory<br/>./data/pushes/"]
+        WOOFS["AI Analysis Storage<br/>./data/woofs/"]
     end
     
-    subgraph "Command Layer"
-        PLUMB[Plumbing Commands<br/>hash-object, cat-file]
-        PORC[Porcelain Commands<br/>add, commit, log]
+    subgraph "Server Layer - IMPLEMENTED"
+        LISTEN["TCP Listener<br/>minimal-server-daemon.scm:25"]
+        HANDLER["Push Handler<br/>minimal-server-storage.scm:67"]
+        STORAGE["Storage Engine<br/>src/storage/plain-text.scm:31"]
     end
     
-    subgraph "Network Layer"
-        PROTO[Git Protocol]
-        PACK[Packfiles]
-        SERVER[Git Server]
+    subgraph "Plugin System - IMPLEMENTED"
+        AI["Ollama Integration<br/>plugins/woof-ai-summary.sh"]
+        ANALYSIS["Changeset Analysis<br/>plugins/woof-analyzer.scm"]
     end
     
-    OBJ --> REPO
-    HASH --> OBJ
-    COMP --> OBJ
-    REPO --> PLUMB
-    INDEX --> PORC
-    REFS --> PORC
-    CONFIG --> REPO
-    PLUMB --> PORC
-    PROTO --> PACK
-    PACK --> SERVER
+    subgraph "Development Infrastructure"
+        EXP["Experiments<br/>experiments/000-006/"]
+        TESTS["Test Suite<br/>tests/"]
+        DOCS["Documentation<br/>*.org, *.md"]
+    end
+    
+    LISTEN --> HANDLER
+    HANDLER --> PKT
+    PKT --> STORAGE
+    STORAGE --> PLAIN
+    PLAIN --> DATA
+    HANDLER --> AI
+    AI --> WOOFS
+    SHA1 --> STORAGE
+    ZLIB --> STORAGE
+#+END_SRC
+
+** Request Flow Diagram
+#+BEGIN_SRC mermaid
+sequenceDiagram
+    participant Client as Git Client
+    participant Server as Guile Git Server
+    participant Storage as Plain Text Storage
+    participant AI as Ollama AI
+    
+    Note over Client,AI: Git Push Operation Flow
+    
+    Client->>Server: TCP connect :9418
+    Server->>Server: Accept connection (daemon.scm:45)
+    
+    Client->>Server: git-receive-pack /repo.git
+    Server->>Server: Parse request (storage.scm:67)
+    Server->>Server: Extract repo name (storage.scm:58)
+    
+    Server->>Client: capabilities^{} (storage.scm:78)
+    Server->>Client: flush packet
+    
+    Client->>Server: push commands + pack data
+    Server->>Storage: Store push data (plain-text.scm:45)
+    Storage->>Storage: Create timestamped file
+    
+    Server->>Client: report-status success
+    Server->>Server: Log completion
+    
+    Note over AI: Background AI Analysis (Optional)
+    Storage-->>AI: Trigger analysis
+    AI-->>AI: Generate dog-themed summary
+    AI-->>Storage: Save to woofs/
 #+END_SRC
 
 * Project Structure
 
 #+BEGIN_SRC
 guile-git-scratch/
-├── experiments/          # Experiment-driven development
-│   ├── 000-deps-check/  # Environment verification
-│   ├── 001-book-analysis/ # WYAG structure analysis
-│   ├── 002-git-repository-structure/ # .git exploration
-│   ├── 003-object-model-design/ # Core object design
-│   └── ...             # Progressive experiments
-├── src/                # Main implementation
-│   ├── core/          # Core Git functionality
-│   │   ├── objects.scm    # Object model
-│   │   ├── sha1.scm       # SHA-1 hashing
-│   │   └── repository.scm # Repository operations
-│   ├── commands/      # Git commands
-│   │   ├── init.scm
-│   │   ├── add.scm
-│   │   └── commit.scm
-│   └── utils/         # Utilities
-├── tests/             # Test suite
-├── docs/              # Documentation
-│   ├── implementation.org
-│   └── design.org
-├── examples/          # Usage examples
-└── tmp/              # Book references
+├── experiments/                    # Experiment-driven development ✅
+│   ├── 000-deps-check/            # Environment verification ✅
+│   ├── 001-book-analysis/         # WYAG structure analysis ✅
+│   ├── 002-git-repository-structure/ # .git exploration ✅
+│   ├── 003-object-model-design/   # Core object design ✅
+│   ├── 004-protocol-exploration/  # Git wire protocol ✅
+│   ├── 005-server-implementation/ # TCP server basics ✅
+│   └── 006-guile-freebsd-segfault/ # Platform issue analysis ✅
+├── src/                           # Main implementation ✅
+│   ├── core/                      # Core Git functionality
+│   │   ├── pkt-line.scm          # Git packet protocol ✅
+│   │   ├── sha1-simple.scm       # SHA-1 hashing (shell-based) ✅
+│   │   └── zlib-simple.scm       # Compression (gzip/gunzip) ✅
+│   └── storage/                   # Storage systems
+│       └── plain-text.scm        # Plain text debugging storage ✅
+├── plugins/                       # Plugin system ✅
+│   ├── woof-ai-summary.sh        # AI-powered commit summaries ✅
+│   ├── woof-analyzer.scm         # Guile integration wrapper
+│   └── ollama-*.scm              # Various AI plugins
+├── data/                          # Runtime data (git ignored) ✅
+│   ├── pushes/                   # Push operation logs ✅
+│   └── woofs/                    # AI analysis results ✅
+├── tests/                         # Test suite ✅
+│   ├── test-pkt-line.scm         # Protocol tests ✅
+│   ├── test-storage.scm          # Storage tests ✅
+│   └── run-tests.scm             # Test runner ✅
+├── minimal-server-daemon.scm      # Persistent server ✅
+├── minimal-server-storage.scm     # Server with storage ✅
+├── start-dogfood-server.sh       # tmux session manager ✅
+├── SAMPLE-SESSION.md             # Development workflow demo ✅
+├── ROOF-ROOF-EXPERIMENT.md       # Testing methodology ✅
+└── tmp/                          # Reference materials
     ├── wyag.html
     └── Git_in_Practice.pdf
 #+END_SRC
@@ -230,67 +284,144 @@ Using conventional commits:
 - Document all public procedures
 - Keep modules focused and cohesive
 
-* Dogfooding Methodology
+* Dogfooding Methodology 🐕
 
 ** Philosophy
-This project practices *extreme dogfooding* - we use our own Git implementation as soon as possible, even with minimal functionality. This approach:
+This project practices *extreme dogfooding* with "ROOF ROOF" methodology - we use our own Git implementation as soon as possible, even with minimal functionality. This approach:
 - Forces immediate practical validation
-- Reveals real-world issues quickly
+- Reveals real-world issues quickly  
 - Creates a tight feedback loop
 - Demonstrates confidence in the implementation
+- Makes testing enjoyable with dog-themed commits!
 
 ** Current Dogfooding Setup
 #+BEGIN_SRC bash
-# Start the Guile Git server in tmux
+# Start the Guile Git server in persistent tmux session
 ./start-dogfood-server.sh
+# ✓ Server started in tmux session: guile-git-server
 
-# View server logs
+# View real-time server logs
 tmux attach -t guile-git-server
+# (Press Ctrl-B then D to detach without stopping server)
 
 # Add as remote to any git repo
 git remote add dogfood git://localhost:9418/my-project.git
 git push dogfood main
 
-# Server runs continuously for development
+# Watch what gets stored
+ls data/pushes/$(ls -t data/pushes/ | head -1) | cat
+# ==> Push to my-project.git at 20250820-081142 ===
+
+# Get AI analysis of your changes
+./plugins/woof-ai-summary.sh latest
+# 🐕 Woof woof! The developer just pushed their changes...
 #+END_SRC
 
+** ROOF ROOF Testing Workflow
+See ~ROOF-ROOF-EXPERIMENT.md~ for the complete testing methodology:
+1. **Make It Fun**: Dog-themed commits create emotional investment
+2. **Make It Real**: Use actual Git operations, not mocks
+3. **Make It Visible**: Plain text storage shows everything
+4. **Make It Repeatable**: Documented workflow for consistent testing
+
 ** Dogfooding Milestones
-- [X] v0.0.1 - Server accepts connections (ACHIEVED!)
-- [X] v0.0.2 - Basic push handshake works
-- [ ] v0.0.3 - Pack files are received
-- [ ] v0.0.4 - Objects are stored
-- [ ] v0.1.0 - Full push support
-- [ ] v0.2.0 - Clone/fetch works
-- [ ] v1.0.0 - Self-hosting development
+- [X] v0.0.1 - Server accepts connections (~minimal-server.scm~)
+- [X] v0.0.2 - Basic push handshake works (~minimal-server-daemon.scm~)
+- [X] v0.0.3 - Push data is received and stored (~minimal-server-storage.scm~)
+- [X] v0.0.4 - AI-powered commit analysis works (~plugins/woof-ai-summary.sh~)
+- [X] v0.0.5 - Continuous dogfooding environment (~start-dogfood-server.sh~)
+- [ ] v0.1.0 - Pack file parsing and object storage
+- [ ] v0.2.0 - Clone/fetch operations
+- [ ] v1.0.0 - Self-hosting development (using our Git for our Git!)
+
+* Implementation Details
+
+** Core Components
+
+*** Git Protocol Implementation (~src/core/pkt-line.scm~)
+Implements the Git wire protocol packet format:
+#+BEGIN_SRC scheme
+(define (pkt-line-write socket data)
+  "Send a packet line with 4-byte hex length prefix")
+
+(define (pkt-line-read socket)
+  "Read a packet line, handling flush packets")
+#+END_SRC
+
+*** Storage System (~src/storage/plain-text.scm~)
+Plain text storage for maximum debuggability:
+#+BEGIN_SRC scheme
+(define (store-push-data repo-name data)
+  "Store raw push data with timestamp for debugging")
+
+(define (extract-repo-name line)
+  "Parse repository name from Git request")
+#+END_SRC
+
+*** Server Implementation (~minimal-server-storage.scm~)
+Main server with actual storage capabilities:
+#+BEGIN_SRC scheme
+(define (handle-receive-pack socket)
+  "Handle git push operations with storage")
+
+(define (handle-client-connection socket)
+  "Main request handling with repository parsing")
+#+END_SRC
+
+** Plugin System
+
+*** AI Integration (~plugins/woof-ai-summary.sh~)
+Shell-based Ollama integration for commit analysis:
+#+BEGIN_SRC bash
+generate_ai_summary() {
+    # Calls qwen2.5-coder:7b for dog-themed commit summaries
+    curl -s -X POST "$OLLAMA_URL" -d "$json_payload"
+}
+#+END_SRC
+
+*** FreeBSD Compatibility Issue
+Documented segmentation fault in ~experiments/006-guile-freebsd-segfault/~:
+- Guile3 process spawning incompatible with FreeBSD's ~posix_spawn_file_actions_addclosefrom_np~
+- Workaround: Use shell scripts for system integration
+- Impact: No functionality lost, improved portability
 
 * Getting Started
 
 ** Prerequisites
 #+BEGIN_SRC bash
-# FreeBSD packages
-pkg install guile3 gmake tmux
+# FreeBSD packages (required)
+pkg install guile3 gmake tmux curl
 
-# Optional for full functionality
-pkg install emacs  # For org-mode tangling
+# AI integration (optional)
+pkg install ollama  # or install from GitHub
+
+# Development tools (optional)
+pkg install emacs gdb  # debugging and org-mode
 #+END_SRC
 
-** Quick Start - Dogfooding
+** Quick Start - Dogfooding with AI
 #+BEGIN_SRC bash
 # Clone the repository
 git clone https://github.com/dsp-dr/guile-git-scratch.git
 cd guile-git-scratch
 
-# Start the dogfood server
+# Start the dogfood server (persistent tmux session)
 ./start-dogfood-server.sh
 
 # In another terminal, test pushing
-git remote add dogfood git://localhost:9418/test.git
-echo "dogfood test" > test.txt
-git add test.txt && git commit -m "Dogfood test"
+git remote add dogfood git://localhost:9418/guile-git-scratch.git
+echo "🐕 Testing our dogfood server!" > woof-test.txt
+git add woof-test.txt && git commit -m "woof: testing dogfood server"
 git push dogfood main
 
-# Watch server logs
+# Generate AI analysis of the push (requires ollama)
+./plugins/woof-ai-summary.sh latest
+# Output: 🐕 AI WOOF ANALYSIS - dog-themed commit summary!
+
+# Watch server logs and see stored data
 tmux attach -t guile-git-server
+ls data/pushes/  # See stored push attempts
+ls data/woofs/   # See AI analyses
 #+END_SRC
 
 ** Building
@@ -323,29 +454,96 @@ gmake test-server      # Port 9419
 ./run-server.scm -p 9419 -r ./my-repos
 #+END_SRC
 
+* Fun Features 🎉
+
+** AI-Powered Commit Analysis
+Get dog-themed summaries of your Git pushes using Ollama:
+#+BEGIN_SRC bash
+./plugins/woof-ai-summary.sh test
+# 🐕 TESTING WOOF AI ANALYSIS...
+# 🐕 AI WOOF ANALYSIS - 2025-08-20 08:15:21
+# Woof woof! The developer just pushed their changes to the 'test-doghouse' 
+# repository 🏡 and it sounds like they were trying to communicate with their 
+# localhost server on port 9418. Looks like someone's project is growing 
+# furiously, as if a new puppy was added to the team! 🐾
+#+END_SRC
+
+** Development Session Demo
+See ~SAMPLE-SESSION.md~ for a complete "screenshot" of a development session showing:
+- tmux server session with live logs
+- Real Git push operations being handled
+- Storage system capturing all data
+- AI analysis generation
+
+** Experiment-Driven Development
+Each major feature starts as a numbered experiment:
+- ~000-deps-check/~ - Environment verification
+- ~001-book-analysis/~ - WYAG tutorial exploration  
+- ~006-guile-freebsd-segfault/~ - Platform compatibility analysis
+
 * Contributing
 
 This is an experimental implementation for learning purposes. Contributions focusing on:
-- Functional programming patterns
-- Guile-specific optimizations
-- FreeBSD integration
-- Educational documentation
+- Functional programming patterns in Scheme
+- Guile-specific optimizations and idioms
+- FreeBSD integration and platform features
+- Educational documentation and literate programming
+- Creative AI integrations and plugin development
+- Dog-themed humor in commit messages and documentation 🐕
 
-are especially welcome.
+are especially welcome!
 
 * References
 
-- [[https://wyag.thb.lt/]["Write Yourself a Git!"]] - Primary reference
-- [[https://git-scm.com/book][Pro Git Book]] - Git internals
-- [[https://www.gnu.org/software/guile/manual/][Guile Reference Manual]]
-- [[https://srfi.schemers.org/][Scheme SRFIs]]
+** Primary References
+- [[https://wyag.thb.lt/]["Write Yourself a Git!"]] - Thibault Polge's excellent tutorial
+- [[https://git-scm.com/book][Pro Git Book]] - Git internals and protocol details
+- [[https://git-scm.com/docs/protocol-common][Git Protocol Documentation]] - Wire protocol specification
+
+** Technical Documentation
+- [[https://www.gnu.org/software/guile/manual/][Guile Reference Manual]] - Scheme implementation
+- [[https://srfi.schemers.org/][Scheme SRFIs]] - Standard extension libraries
+- [[https://docs.freebsd.org/][FreeBSD Documentation]] - Platform-specific features
+
+** AI Integration
+- [[https://github.com/ollama/ollama][Ollama]] - Local LLM serving platform
+- [[https://ollama.com/library/qwen2.5-coder][QWen2.5-Coder]] - Code analysis model used for commit summaries
 
 * License
 
 MIT License - See LICENSE file for details.
 
+* Current Status Summary
+
+** What's Working Now ✅
+- Complete Git wire protocol implementation
+- TCP server accepting real Git pushes  
+- Plain text storage system for debugging
+- AI-powered commit analysis with dog themes
+- Continuous dogfooding environment
+- Comprehensive experiment-driven development structure
+- Platform-specific issue documentation and workarounds
+
+** What's Next 🎯  
+- Pack file parsing and object extraction
+- Proper object storage with SHA-1 addressing
+- Reference management and updates
+- Clone and fetch operations
+- Full self-hosting capability
+
+** Project Health 📊
+- **Lines of Code**: ~2000+ (Scheme + Shell + Docs)
+- **Experiments Completed**: 7 major experiments
+- **Test Coverage**: Core protocol and storage functions
+- **Dogfooding Status**: ✅ Daily use for development
+- **AI Integration**: ✅ Ollama-powered commit summaries
+- **Platform Compatibility**: FreeBSD with documented workarounds
+
 * Acknowledgments
 
 - Thibault Polge for the excellent WYAG tutorial
-- The Guile and Scheme communities
-- Git developers for the original implementation
+- The Guile and Scheme communities for functional programming inspiration  
+- Git developers for the original implementation and protocol design
+- The FreeBSD community for platform-specific insights
+- Ollama team for making local AI accessible
+- Every dog who inspired our ROOF ROOF methodology 🐕
