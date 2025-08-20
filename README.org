@@ -299,10 +299,10 @@ ls data/pushes/$(ls -t data/pushes/ | head -1) | cat
 
 ** ROOF ROOF Testing Workflow
 See ~ROOF-ROOF-EXPERIMENT.md~ for the complete testing methodology:
-1. **Make It Fun**: Dog-themed commits create emotional investment
-2. **Make It Real**: Use actual Git operations, not mocks
-3. **Make It Visible**: Plain text storage shows everything
-4. **Make It Repeatable**: Documented workflow for consistent testing
+1. *Make It Fun*: Dog-themed commits create emotional investment
+2. *Make It Real*: Use actual Git operations, not mocks
+3. *Make It Visible*: Plain text storage shows everything
+4. *Make It Repeatable*: Documented workflow for consistent testing
 
 ** Dogfooding Milestones
 - [X] v0.0.1 - Server accepts connections (~minimal-server.scm~)
@@ -512,12 +512,12 @@ MIT License - See LICENSE file for details.
 - Full self-hosting capability
 
 ** Project Health 📊
-- **Lines of Code**: ~2000+ (Scheme + Shell + Docs)
-- **Experiments Completed**: 7 major experiments
-- **Test Coverage**: Core protocol and storage functions
-- **Dogfooding Status**: ✅ Daily use for development
-- **AI Integration**: ✅ Ollama-powered commit summaries
-- **Platform Compatibility**: FreeBSD with documented workarounds
+- *Lines of Code*: ~2000+ (Scheme + Shell + Docs)
+- *Experiments Completed*: 7 major experiments
+- *Test Coverage*: Core protocol and storage functions
+- *Dogfooding Status*: ✅ Daily use for development
+- *AI Integration*: ✅ Ollama-powered commit summaries
+- *Platform Compatibility*: FreeBSD with documented workarounds
 
 * Acknowledgments
 
