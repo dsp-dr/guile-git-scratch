@@ -2,6 +2,11 @@
 *.go
 *.log
 
+# Core dumps and debug files (CRITICAL - these are huge!)
+*.core
+guile-3.0.core
+experiments/*/*.core
+
 # Build directories
 build/
 dist/
@@ -42,9 +47,16 @@ vendor/
 
 # Data storage (local dogfood data)
 data/repos/*
-data/pushes/*
+data/pushes/*.txt
 data/objects/*
 data/refs/*
-# Keep the README
+data/woofs/*.txt
+
+# Keep structure files
 !data/README.md
 !data/*/.gitkeep
+!data/pushes/README.md
+!data/woofs/README.md
+
+# Testing artifacts  
+roof-test-*.txt
