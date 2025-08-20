@@ -6,7 +6,9 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-experimental%20%F0%9F%A7%AA-orange.svg" alt="Experimental">
   <img src="https://img.shields.io/badge/guile-3.0%2B-blue.svg" alt="Guile 3.0+">
+  <img src="https://img.shields.io/badge/platform-FreeBSD-red.svg" alt="FreeBSD">
   <img src="https://img.shields.io/badge/dogfooding-%F0%9F%90%95%20active-green.svg" alt="Dogfooding">
+  <img src="https://img.shields.io/badge/AI%20powered-%F0%9F%A4%96%20ollama-purple.svg" alt="AI Powered">
   <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
 </p>
 #+END_EXPORT
