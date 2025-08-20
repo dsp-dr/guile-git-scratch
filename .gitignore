@@ -39,3 +39,12 @@ experiments/*/results/
 # Dependencies
 node_modules/
 vendor/
+
+# Data storage (local dogfood data)
+data/repos/*
+data/pushes/*
+data/objects/*
+data/refs/*
+# Keep the README
+!data/README.md
+!data/*/.gitkeep
