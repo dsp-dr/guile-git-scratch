@@ -1,0 +1,212 @@
+#+TITLE: Git Object Model Design in Guile
+#+PROPERTY: header-args:scheme :tangle object-model.scm :mkdirp t
+
+* Overview
+
+Design a functional object model for Git objects in Guile3 using GOOPS and records.
+
+* Dependencies
+
+#+BEGIN_SRC scheme
+(define-module (git object-model)
+  #:use-module (ice-9 match)
+  #:use-module (srfi srfi-9)
+  #:use-module (rnrs bytevectors)
+  #:use-module (ice-9 format)
+  #:export (make-git-object
+            git-object?
+            git-object-type
+            git-object-size
+            git-object-content
+            
+            make-blob
+            blob?
+            
+            make-tree
+            tree?
+            tree-entries
+            
+            make-commit
+            commit?
+            commit-tree
+            commit-parents
+            commit-author
+            commit-committer
+            commit-message
+            
+            make-tag
+            tag?
+            tag-object
+            tag-type
+            tag-tag
+            tag-tagger
+            tag-message
+            
+            serialize-object
+            deserialize-object))
+#+END_SRC
+
+* Base Object Type
+
+#+BEGIN_SRC scheme
+(define-record-type <git-object>
+  (make-git-object type size content)
+  git-object?
+  (type git-object-type)
+  (size git-object-size)
+  (content git-object-content))
+#+END_SRC
+
+* Blob Objects
+
+#+BEGIN_SRC scheme
+(define-record-type <blob>
+  (make-blob data)
+  blob?
+  (data blob-data))
+
+(define (blob->git-object blob)
+  (let ((data (blob-data blob)))
+    (make-git-object 'blob 
+                     (bytevector-length data)
+                     data)))
+#+END_SRC
+
+* Tree Objects
+
+#+BEGIN_SRC scheme
+(define-record-type <tree-entry>
+  (make-tree-entry mode name sha)
+  tree-entry?
+  (mode tree-entry-mode)
+  (name tree-entry-name)
+  (sha tree-entry-sha))
+
+(define-record-type <tree>
+  (make-tree entries)
+  tree?
+  (entries tree-entries))
+
+(define (tree->git-object tree)
+  (make-git-object 'tree 
+                   0  ; Calculate actual size
+                   (serialize-tree-entries (tree-entries tree))))
+
+(define (serialize-tree-entries entries)
+  ;; TODO: Implement tree serialization
+  #vu8())
+#+END_SRC
+
+* Commit Objects
+
+#+BEGIN_SRC scheme
+(define-record-type <commit>
+  (make-commit tree parents author committer message)
+  commit?
+  (tree commit-tree)
+  (parents commit-parents)
+  (author commit-author)
+  (committer commit-committer)
+  (message commit-message))
+
+(define (commit->git-object commit)
+  (let ((content (format #f "tree ~a~%~a~aauthor ~a~%committer ~a~%~%~a"
+                        (commit-tree commit)
+                        (string-join 
+                         (map (lambda (p) (format #f "parent ~a~%" p))
+                              (commit-parents commit))
+                         "")
+                        ""
+                        (commit-author commit)
+                        (commit-committer commit)
+                        (commit-message commit))))
+    (make-git-object 'commit
+                     (string-length content)
+                     (string->utf8 content))))
+#+END_SRC
+
+* Tag Objects
+
+#+BEGIN_SRC scheme
+(define-record-type <tag>
+  (make-tag object type tag tagger message)
+  tag?
+  (object tag-object)
+  (type tag-type)
+  (tag tag-tag)
+  (tagger tag-tagger)
+  (message tag-message))
+
+(define (tag->git-object tag)
+  (let ((content (format #f "object ~a~%type ~a~%tag ~a~%tagger ~a~%~%~a"
+                        (tag-object tag)
+                        (tag-type tag)
+                        (tag-tag tag)
+                        (tag-tagger tag)
+                        (tag-message tag))))
+    (make-git-object 'tag
+                     (string-length content)
+                     (string->utf8 content))))
+#+END_SRC
+
+* Serialization
+
+#+BEGIN_SRC scheme
+(define (serialize-object obj)
+  (cond
+   ((blob? obj) (blob->git-object obj))
+   ((tree? obj) (tree->git-object obj))
+   ((commit? obj) (commit->git-object obj))
+   ((tag? obj) (tag->git-object obj))
+   (else (error "Unknown object type" obj))))
+
+(define (deserialize-object type content)
+  (match type
+    ('blob (make-blob content))
+    ('tree (parse-tree content))
+    ('commit (parse-commit content))
+    ('tag (parse-tag content))
+    (_ (error "Unknown object type" type))))
+
+(define (parse-tree content)
+  ;; TODO: Implement tree parsing
+  (make-tree '()))
+
+(define (parse-commit content)
+  ;; TODO: Implement commit parsing
+  (make-commit "" '() "" "" ""))
+
+(define (parse-tag content)
+  ;; TODO: Implement tag parsing
+  (make-tag "" 'commit "" "" ""))
+#+END_SRC
+
+* Tests
+
+#+BEGIN_SRC scheme :tangle test-object-model.scm
+(use-modules (git object-model)
+             (srfi srfi-64)
+             (rnrs bytevectors))
+
+(test-begin "git-object-model")
+
+(test-assert "Create blob"
+  (let ((blob (make-blob (string->utf8 "Hello, Git!"))))
+    (blob? blob)))
+
+(test-assert "Create tree"
+  (let ((tree (make-tree 
+               (list (make-tree-entry "100644" "README.md" "abc123")))))
+    (tree? tree)))
+
+(test-assert "Create commit"
+  (let ((commit (make-commit 
+                 "tree-sha"
+                 '("parent-sha")
+                 "Author Name <email>"
+                 "Committer Name <email>"
+                 "Initial commit")))
+    (commit? commit)))
+
+(test-end "git-object-model")
+#+END_SRC

@@ -1,0 +1,268 @@
+#+TITLE: Guile Git Implementation
+#+AUTHOR: dsp-dr
+#+DESCRIPTION: A Git client and server implementation in Guile3 on FreeBSD
+
+#+BEGIN_EXPORT html
+<p align="center">
+  <img src="https://img.shields.io/badge/status-experimental-orange.svg" alt="Experimental">
+  <img src="https://img.shields.io/badge/guile-3.0+-blue.svg" alt="Guile 3.0+">
+  <img src="https://img.shields.io/badge/platform-FreeBSD-red.svg" alt="FreeBSD">
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="MIT License">
+</p>
+#+END_EXPORT
+
+* Overview
+
+This project implements a Git client and server in Guile Scheme 3.0+, following the excellent [[https://wyag.thb.lt/]["Write Yourself a Git!"]] tutorial. The implementation emphasizes functional programming patterns, experiment-driven development, and FreeBSD-specific optimizations.
+
+* Architecture
+
+#+BEGIN_SRC mermaid
+graph TB
+    subgraph "Core Layer"
+        OBJ[Object Model<br/>blob, tree, commit, tag]
+        HASH[SHA-1 Hashing]
+        COMP[Zlib Compression]
+    end
+    
+    subgraph "Storage Layer"
+        REPO[Repository]
+        INDEX[Index/Staging]
+        REFS[References]
+        CONFIG[Configuration]
+    end
+    
+    subgraph "Command Layer"
+        PLUMB[Plumbing Commands<br/>hash-object, cat-file]
+        PORC[Porcelain Commands<br/>add, commit, log]
+    end
+    
+    subgraph "Network Layer"
+        PROTO[Git Protocol]
+        PACK[Packfiles]
+        SERVER[Git Server]
+    end
+    
+    OBJ --> REPO
+    HASH --> OBJ
+    COMP --> OBJ
+    REPO --> PLUMB
+    INDEX --> PORC
+    REFS --> PORC
+    CONFIG --> REPO
+    PLUMB --> PORC
+    PROTO --> PACK
+    PACK --> SERVER
+#+END_SRC
+
+* Project Structure
+
+#+BEGIN_SRC
+guile-git-scratch/
+├── experiments/          # Experiment-driven development
+│   ├── 000-deps-check/  # Environment verification
+│   ├── 001-book-analysis/ # WYAG structure analysis
+│   ├── 002-git-repository-structure/ # .git exploration
+│   ├── 003-object-model-design/ # Core object design
+│   └── ...             # Progressive experiments
+├── src/                # Main implementation
+│   ├── core/          # Core Git functionality
+│   │   ├── objects.scm    # Object model
+│   │   ├── sha1.scm       # SHA-1 hashing
+│   │   └── repository.scm # Repository operations
+│   ├── commands/      # Git commands
+│   │   ├── init.scm
+│   │   ├── add.scm
+│   │   └── commit.scm
+│   └── utils/         # Utilities
+├── tests/             # Test suite
+├── docs/              # Documentation
+│   ├── implementation.org
+│   └── design.org
+├── examples/          # Usage examples
+└── tmp/              # Book references
+    ├── wyag.html
+    └── Git_in_Practice.pdf
+#+END_SRC
+
+* Roadmap
+
+** v0.1.0 - Core Objects and Basic Operations
+- [X] Environment setup and verification
+- [X] Book structure analysis
+- [X] Object model design
+- [ ] SHA-1 hashing implementation
+- [ ] Zlib compression integration
+- [ ] Basic repository operations (init)
+- [ ] Object storage (hash-object)
+- [ ] Object retrieval (cat-file)
+
+** v0.2.0 - Commits and History
+- [ ] Commit object handling
+- [ ] Log command implementation
+- [ ] Tree parsing and manipulation
+- [ ] Basic checkout functionality
+
+** v0.3.0 - References and Branches
+- [ ] Reference management
+- [ ] Tag support (lightweight and annotated)
+- [ ] Branch operations
+- [ ] Object name resolution (rev-parse)
+
+** v0.4.0 - Index and Staging
+- [ ] Index file format parsing
+- [ ] Staging area operations (add, rm)
+- [ ] Status command
+- [ ] Commit creation from index
+
+** v0.5.0 - Advanced Features
+- [ ] Packfile support
+- [ ] Network protocol basics
+- [ ] Fetch operation
+- [ ] Push operation
+
+** v0.6.0 - Server Implementation
+- [ ] Git server protocol
+- [ ] receive-pack implementation
+- [ ] upload-pack implementation
+- [ ] Hook system
+
+** v0.7.0 - FreeBSD Optimizations
+- [ ] kqueue integration for file watching
+- [ ] Capsicum sandboxing
+- [ ] Performance tuning
+
+** v0.8.0 - Documentation and Examples
+- [ ] Complete API documentation
+- [ ] Usage examples
+- [ ] Migration guide from Git
+
+** v0.9.0 - Testing and Stabilization
+- [ ] Comprehensive test coverage
+- [ ] Performance benchmarks
+- [ ] Bug fixes and refinements
+
+** v1.0.0 - Production Release
+- [ ] API stability
+- [ ] Full Git compatibility subset
+- [ ] Production-ready documentation
+
+* Implementation Approach
+
+** Functional First
+All data structures are immutable by default, using SRFI-9 records and functional transformations.
+
+** Experiment-Driven Development
+Each major feature starts as an isolated experiment in the =experiments/= directory, allowing for exploration and validation before integration.
+
+** Literate Programming
+Core modules are written using Org-mode with Babel, combining documentation and code for better understanding.
+
+** FreeBSD Integration
+Leveraging FreeBSD-specific features like kqueue for efficient file monitoring and Capsicum for security.
+
+* Commands Implemented
+
+| Command      | Status      | Description                  |
+|--------------+-------------+------------------------------|
+| init         | Planned     | Initialize repository        |
+| hash-object  | Planned     | Store object in database     |
+| cat-file     | Planned     | Display object contents      |
+| log          | Planned     | Show commit logs             |
+| ls-tree      | Planned     | List tree object             |
+| checkout     | Planned     | Switch branches              |
+| show-ref     | Planned     | List references              |
+| tag          | Planned     | Create tags                  |
+| rev-parse    | Planned     | Parse revision names         |
+| ls-files     | Planned     | Show index contents          |
+| check-ignore | Planned     | Check gitignore rules        |
+| status       | Planned     | Show working tree status     |
+| rm           | Planned     | Remove from index            |
+| add          | Planned     | Add to index                 |
+| commit       | Planned     | Record changes               |
+
+* Development Guidelines
+
+** Commit Conventions
+Using conventional commits:
+- =feat(module):= New features
+- =fix(module):= Bug fixes
+- =exp(NNN):= Experiment work
+- =docs:= Documentation updates
+- =test:= Test additions/changes
+
+** Testing Strategy
+- Unit tests for all public APIs using SRFI-64
+- Integration tests for command-line interface
+- Property-based testing for critical algorithms
+- Performance benchmarks for optimization targets
+
+** Code Style
+- Prefer functional patterns over mutation
+- Use pattern matching (ice-9 match) for clarity
+- Document all public procedures
+- Keep modules focused and cohesive
+
+* Getting Started
+
+** Prerequisites
+#+BEGIN_SRC bash
+# FreeBSD packages
+pkg install guile3 gmake
+
+# Optional for full functionality
+pkg install emacs  # For org-mode tangling
+#+END_SRC
+
+** Building
+#+BEGIN_SRC bash
+# Run experiments
+cd experiments
+gmake list  # See all experiments
+gmake run EXP=000-deps-check  # Run specific experiment
+
+# Build main project
+gmake build
+
+# Run tests
+gmake test
+#+END_SRC
+
+** Usage
+#+BEGIN_SRC bash
+# Initialize a repository
+./guile-git init my-repo
+
+# Add files
+./guile-git add file.txt
+
+# Commit changes
+./guile-git commit -m "Initial commit"
+#+END_SRC
+
+* Contributing
+
+This is an experimental implementation for learning purposes. Contributions focusing on:
+- Functional programming patterns
+- Guile-specific optimizations
+- FreeBSD integration
+- Educational documentation
+
+are especially welcome.
+
+* References
+
+- [[https://wyag.thb.lt/]["Write Yourself a Git!"]] - Primary reference
+- [[https://git-scm.com/book][Pro Git Book]] - Git internals
+- [[https://www.gnu.org/software/guile/manual/][Guile Reference Manual]]
+- [[https://srfi.schemers.org/][Scheme SRFIs]]
+
+* License
+
+MIT License - See LICENSE file for details.
+
+* Acknowledgments
+
+- Thibault Polge for the excellent WYAG tutorial
+- The Guile and Scheme communities
+- Git developers for the original implementation

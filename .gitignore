@@ -1,0 +1,41 @@
+# Guile compilation artifacts
+*.go
+*.log
+
+# Build directories
+build/
+dist/
+
+# Backup files
+*~
+\#*\#
+.\#*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test artifacts
+test-results/
+coverage/
+
+# Temporary files
+tmp/*.pdf
+*.tmp
+
+# Experiment results
+experiments/*/results/
+
+# Generated documentation
+*.html
+!tmp/wyag.html
+
+# Dependencies
+node_modules/
+vendor/
