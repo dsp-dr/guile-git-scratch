@@ -1,6 +1,6 @@
 # Guile Git Implementation Makefile
 
-.PHONY: all build test clean experiments docs
+.PHONY: all build test clean experiments docs run-server test-server
 
 all: build
 
@@ -27,6 +27,16 @@ clean:
 	@cd experiments && gmake clean
 	@find . -name "*.go" -delete
 	@echo "Clean complete."
+
+run-server:
+	@echo "Starting Guile Git server..."
+	@chmod +x run-server.scm
+	@./run-server.scm
+
+test-server:
+	@echo "Starting test server on port 9419..."
+	@chmod +x run-server.scm
+	@./run-server.scm -p 9419 -r ./test-repos
 
 # Book reference targets
 tmp/wyag.html:
