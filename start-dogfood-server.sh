@@ -32,7 +32,12 @@ tmux send-keys -t $SESSION_NAME "echo '=== Guile Git Server for Dogfooding ==='"
 tmux send-keys -t $SESSION_NAME "echo 'Port: $SERVER_PORT'" C-m
 tmux send-keys -t $SESSION_NAME "echo 'Repos: $REPOS_DIR'" C-m
 tmux send-keys -t $SESSION_NAME "echo ''" C-m
-tmux send-keys -t $SESSION_NAME "./minimal-server.scm" C-m
+tmux send-keys -t $SESSION_NAME "echo 'Choose your server:'" C-m
+tmux send-keys -t $SESSION_NAME "echo '1. ./minimal-server.scm (one connection then exit - good for testing)'" C-m
+tmux send-keys -t $SESSION_NAME "echo '2. ./minimal-server-daemon.scm (stays running - good for dogfooding)'" C-m
+tmux send-keys -t $SESSION_NAME "echo ''" C-m
+tmux send-keys -t $SESSION_NAME "echo 'Starting daemon version for continuous dogfooding...'" C-m
+tmux send-keys -t $SESSION_NAME "./minimal-server-daemon.scm" C-m
 
 echo "✓ Server started in tmux session: $SESSION_NAME"
 echo
