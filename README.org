@@ -260,27 +260,9 @@ Leveraging FreeBSD-specific features like kqueue for efficient file monitoring a
 | add          | Planned     | Add to index                 |
 | commit       | Planned     | Record changes               |
 
-* Development Guidelines
+* Contributing
 
-** Commit Conventions
-Using conventional commits:
-- =feat(module):= New features
-- =fix(module):= Bug fixes
-- =exp(NNN):= Experiment work
-- =docs:= Documentation updates
-- =test:= Test additions/changes
-
-** Testing Strategy
-- Unit tests for all public APIs using SRFI-64
-- Integration tests for command-line interface
-- Property-based testing for critical algorithms
-- Performance benchmarks for optimization targets
-
-** Code Style
-- Prefer functional patterns over mutation
-- Use pattern matching (ice-9 match) for clarity
-- Document all public procedures
-- Keep modules focused and cohesive
+See [[file:CONTRIBUTING.md][CONTRIBUTING.md]] for detailed development guidelines, coding standards, and contribution workflow.
 
 * Dogfooding Methodology 🐕
 
